@@ -1,45 +1,34 @@
+import os
+import pickle
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
-import pickle
 
 app = Flask(__name__)
-CORS(app)      # Enables frontend → backend communication
+CORS(app)
 
-# ================================
-# LOAD MODEL AND SCALER SAFELY
-# ================================
-# Use RAW STRING r"" to avoid unicode errors
-import os
+BASE_DIR = os.path.dirname(__file__)
+MODEL_PATH = os.path.join(BASE_DIR, "model.pkl")
+SCALER_PATH = os.path.join(BASE_DIR, "scaler.pkl")
 
-MODEL_PATH = os.path.join(os.path.dirname(__file__), "model.pkl")
-SCALER_PATH = os.path.join(os.path.dirname(__file__), "scaler.pkl")
+with open(MODEL_PATH, "rb") as f:
+    model = pickle.load(f)
 
-model = pickle.load(open(MODEL_PATH, "rb"))
-scaler = pickle.load(open(SCALER_PATH, "rb"))
+with open(SCALER_PATH, "rb") as f:
+    scaler = pickle.load(f)
 
-
-# ================================
-# PREDICTION API
-# ================================
 @app.route("/predict", methods=["POST"])
 def predict():
     try:
-        data = request.json["features"]        # Read input features
-        data = np.array(data).reshape(1, -1)   # Convert to array
-        data_scaled = scaler.transform(data)   # Scale inputs
+        data = request.json["features"]
+        data = np.array(data).reshape(1, -1)
+        data_scaled = scaler.transform(data)
         prediction = model.predict(data_scaled)[0]
-
         result = "Benign (No Cancer)" if prediction == 1 else "Malignant (Cancer Detected)"
-
         return jsonify({"prediction": result})
-
     except Exception as e:
-        return jsonify({"error": str(e)})
+        return jsonify({"error": str(e)}), 400
 
-# ================================
-# RUN FLASK SERVER
-# ================================
 if __name__ == "__main__":
-    app.run(debug=True)
-
+    # only used for local testing
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
