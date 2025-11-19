@@ -10,8 +10,14 @@ CORS(app)      # Enables frontend → backend communication
 # LOAD MODEL AND SCALER SAFELY
 # ================================
 # Use RAW STRING r"" to avoid unicode errors
-model = pickle.load(open(r"C:\Users\shrut\OneDrive\Desktop\BreastCancerFrontend\model.pkl", "rb"))
-scaler = pickle.load(open(r"C:\Users\shrut\OneDrive\Desktop\BreastCancerFrontend\scaler.pkl", "rb"))
+import os
+
+MODEL_PATH = os.path.join(os.path.dirname(__file__), "model.pkl")
+SCALER_PATH = os.path.join(os.path.dirname(__file__), "scaler.pkl")
+
+model = pickle.load(open(MODEL_PATH, "rb"))
+scaler = pickle.load(open(SCALER_PATH, "rb"))
+
 
 # ================================
 # PREDICTION API
@@ -36,3 +42,4 @@ def predict():
 # ================================
 if __name__ == "__main__":
     app.run(debug=True)
+
